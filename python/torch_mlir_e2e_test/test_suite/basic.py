@@ -162,26 +162,6 @@ class AddmmModuleDifferentRankBroadcastable(torch.nn.Module):
 def AddmmModule_differentRankBroadcastable(module, tu: TestUtils):
     module.forward(tu.rand(3), tu.rand(3, 2), tu.rand(2, 3))
 
-#  ==============================================================================
-
-class AdaptiveAvgPool2dModule(torch.nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.aap2d = torch.nn.AdaptiveAvgPool2d((1, 1))
-
-    @export
-    @annotate_args([
-        None,
-        ([-1, -1, -1, -1], torch.float32, True),
-    ])
-    def forward(self, x):
-        return self.aap2d(x)
-
-
-@register_test_case(module_factory=lambda: AdaptiveAvgPool2dModule())
-def AdaptiveAvgPool2dModule_basic(module, tu: TestUtils):
-    module.forward(tu.rand(10, 3, 8, 9))
-
 # ==============================================================================
 
 class FlattenStaticModule(torch.nn.Module):
@@ -241,51 +221,6 @@ class FlattenDynamicModule(torch.nn.Module):
 @register_test_case(module_factory=lambda: FlattenDynamicModule())
 def FlattenDynamicModule_basic(module, tu: TestUtils):
     module.forward(tu.rand(10, 3, 8, 9, 3, 4))
-
-# ==============================================================================
-
-class MaxPool2dModule(torch.nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.mp2d = torch.nn.MaxPool2d(kernel_size=[6, 8],
-                                       stride=[2, 2],
-                                       padding=[3, 4],
-                                       dilation=2)
-
-    @export
-    @annotate_args([
-        None,
-        ([-1, -1, -1, -1], torch.float32, True),
-    ])
-    def forward(self, x):
-        return self.mp2d(x)
-
-# ==============================================================================
-
-@register_test_case(module_factory=lambda: MaxPool2dModule())
-def MaxPool2dModule_basic(module, tu: TestUtils):
-    module.forward(tu.rand(1, 1, 20, 20) - 0.5)
-
-class MaxPool2dStaticModule(torch.nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.mp2d = torch.nn.MaxPool2d(kernel_size=[3, 3],
-                                       stride=[2, 2],
-                                       padding=[1, 1],
-                                       dilation=[1, 1])
-
-    @export
-    @annotate_args([
-        None,
-        ([1, 64, 112, 112], torch.float32, True),
-    ])
-    def forward(self, x):
-        return self.mp2d(x)
-
-
-@register_test_case(module_factory=lambda: MaxPool2dStaticModule())
-def MaxPool2dStaticModule_basic(module, tu: TestUtils):
-    module.forward(tu.rand(1, 64, 112, 112))
 
 # ==============================================================================
 
