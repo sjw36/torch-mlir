@@ -2352,6 +2352,18 @@ LogicalResult ConvertAtenOp<ValueTensorLiteralOp>::matchAndRewrite(
       return success();
     }
   }
+  if (auto elements = op.getValueAttr().dyn_cast<DenseFPElementsAttr>()) {
+    if (elements.getElementType().isF64()) {
+      Type builtinTensorElemTy = outputTy.getElementType();
+      DenseElementsAttr valueAttr =
+          elements.mapValues(builtinTensorElemTy, [&](const APFloat &v) {
+            APFloat apfv(static_cast<float>(v.convertToDouble()));
+            return apfv.bitcastToAPInt();
+          });
+      rewriter.replaceOpWithNewOp<tosa::ConstOp>(op, outputTy, valueAttr);
+      return success();
+    }
+  }
   rewriter.replaceOpWithNewOp<tosa::ConstOp>(op, outputTy, adaptor.getValue());
   return success();
 }
@@ -4243,6 +4255,17 @@ public:
     TypeConverter typeConverter;
     typeConverter.addConversion([](Type type) { return type; });
     TorchConversion::setupBackendTypeConversion(target, typeConverter);
+
+    // Convert vtensor<f64> to f32
+    typeConverter.addConversion([&](torch::Torch::ValueTensorType type) -> std::optional<Type> {
+        if (type.getOptionalDtype().isF64()) {
+          if (auto tshape = type.getOptionalSizes())
+            return RankedTensorType::get(tshape.value(), mlir::FloatType::getF32(context));
+          else
+            return UnrankedTensorType::get(mlir::FloatType::getF32(context));
+        }
+        return std::nullopt;
+      });
 
     RewritePatternSet patterns(context);
 

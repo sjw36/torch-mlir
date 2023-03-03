@@ -1100,3 +1100,21 @@ func.func @torch.aten.where.self(%arg0: !torch.vtensor<[1,1,5,5],i1>, %arg1: !to
   %0 = torch.aten.where.self %arg0, %arg1, %arg2 : !torch.vtensor<[1,1,5,5],i1>, !torch.vtensor<[1,12,5,5],f32>, !torch.vtensor<[],f32> -> !torch.vtensor<[1,12,5,5],f32>
   return %0 : !torch.vtensor<[1,12,5,5],f32>
 }
+
+// -----
+// CHECK-LABEL:   func.func @torch.aten.f64.to.f32(
+// CHECK-SAME:                                     %[[VAL_0:.*]]: !torch.vtensor<[5],f32>) -> !torch.vtensor<[5],f32> {
+// CHECK:    %[[VAL_1:.*]] = torch_c.to_builtin_tensor %[[VAL_0]] : !torch.vtensor<[5],f32> -> tensor<5xf32>
+// CHECK:    %[[VAL_2:.*]] = "tosa.const"() {value = dense<5.000000e-01> : tensor<1xf32>} : () -> tensor<1xf32>
+// CHECK:    %[[VAL_3:.*]] = "tosa.const"() {value = dense<1.000000e+00> : tensor<f32>} : () -> tensor<f32>
+// CHECK:    %[[VAL_4:.*]] = "tosa.mul"(%[[VAL_2]], %[[VAL_3]]) {shift = 0 : i32} : (tensor<1xf32>, tensor<f32>) -> tensor<1xf32>
+// CHECK:    %[[VAL_5:.*]] = "tosa.add"(%[[VAL_1]], %[[VAL_4]]) : (tensor<5xf32>, tensor<1xf32>) -> tensor<5xf32>
+// CHECK:    %[[VAL_6:.*]] = torch_c.from_builtin_tensor %[[VAL_5]] : tensor<5xf32> -> !torch.vtensor<[5],f32>
+// CHECK:    return %[[VAL_6]] : !torch.vtensor<[5],f32>
+// CHECK:  }
+func.func @torch.aten.f64.to.f32(%arg0: !torch.vtensor<[5],f32>) -> !torch.vtensor<[5],f32> {
+  %cst = torch.vtensor.literal(dense<[5.000000e-01]> : tensor<1xf64>) : !torch.vtensor<[1],f64>
+  %int1 = torch.constant.int 1
+  %0 = torch.aten.add.Tensor %arg0, %cst, %int1 : !torch.vtensor<[5],f32>, !torch.vtensor<[1],f64>, !torch.int -> !torch.vtensor<[5],f32>
+  return %0 : !torch.vtensor<[5],f32>
+}
